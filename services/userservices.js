@@ -65,7 +65,7 @@ exports.registerUser = async (email, password, username) => {
   const hashedPassword = await bcrypt.hash(password, 10);
   
 
-  const user = new User({ email, password: hashedPassword, username });
+  const user = new User({ email, password: hashedPassword, username, firstName, lastName, age, gender });
   await user.save();
   
 
