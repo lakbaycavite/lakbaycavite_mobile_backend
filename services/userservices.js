@@ -40,6 +40,7 @@ exports.registerUser = async (email, password, username) => {
     throw new Error('Invalid email format');
   }
 
+<<<<<<< HEAD
   const usernameRegExp = /^[a-zA-Z0-9_]{3,20}$/; 
   if (!usernameRegExp.test(username)) {
     throw new Error('Username must be between 3 and 20 characters long and can only contain letters, numbers, and underscores');
@@ -51,6 +52,13 @@ exports.registerUser = async (email, password, username) => {
     };
   
 
+=======
+  const usernameRegExp = /^[a-zA-Z0-9_]{5,12}$/; 
+  if (!usernameRegExp.test(username)) {
+    throw new Error('Username must be between 5 and 12 characters long and can only contain letters, numbers, and underscores');
+  }
+
+>>>>>>> 5abb461ca710a01936e209acf8b37720725d5a07
   const existingUser = await User.findOne({ email });
   if (existingUser) {
     throw new Error('Email already exists');
@@ -71,7 +79,11 @@ exports.registerUser = async (email, password, username) => {
   const hashedPassword = await bcrypt.hash(password, 10);
   
 
+<<<<<<< HEAD
   const user = new User({ email, password: hashedPassword, username, firstName, lastName });
+=======
+  const user = new User({ email, password: hashedPassword, username, firstName, lastName, age, gender });
+>>>>>>> 5abb461ca710a01936e209acf8b37720725d5a07
   await user.save();
   
 
@@ -86,7 +98,11 @@ exports.loginUser = async (email, password) => {
     throw new Error('Invalid credentials');
   }
 
+<<<<<<< HEAD
   
+=======
+  // Generate a token for the user
+>>>>>>> 5abb461ca710a01936e209acf8b37720725d5a07
   const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET, { expiresIn: '6h' });
   
   return {
@@ -103,6 +119,7 @@ exports.loginUser = async (email, password) => {
 
 exports.updateUser = async (userId, updateData) => {
   try {
+<<<<<<< HEAD
   
     const updatedUser = await User.findByIdAndUpdate(
       userId,
@@ -111,11 +128,25 @@ exports.updateUser = async (userId, updateData) => {
     );
 
    
+=======
+    // Find the user by ID and update
+    const updatedUser = await User.findByIdAndUpdate(
+      userId,
+      updateData, // Pass the update data object
+      { new: true, runValidators: true }
+    );
+
+    // Check if the update was successful
+>>>>>>> 5abb461ca710a01936e209acf8b37720725d5a07
     if (!updatedUser) {
       throw new Error('User not found');
     }
 
+<<<<<<< HEAD
     
+=======
+    // Return a success message along with the updated user
+>>>>>>> 5abb461ca710a01936e209acf8b37720725d5a07
     return {
       success: true,
       message: 'User updated successfully',
@@ -123,7 +154,11 @@ exports.updateUser = async (userId, updateData) => {
     };
 
   } catch (error) {
+<<<<<<< HEAD
     
+=======
+    // Return error message
+>>>>>>> 5abb461ca710a01936e209acf8b37720725d5a07
     return {
       success: false,
       message: error.message || 'Failed to update user',
