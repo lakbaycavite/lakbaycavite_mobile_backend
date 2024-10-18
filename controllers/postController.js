@@ -2,7 +2,6 @@ const Post = require('../model/postModel');
 const path = require('path');
 
 
-<<<<<<< HEAD
 
 exports.createPost = async (req, res) => {
     try {
@@ -26,31 +25,11 @@ exports.createPost = async (req, res) => {
         };
 
         res.status(201).json(responsePost);
-=======
-// Create new post
-exports.createPost = async (req, res) => {
-    try {
-        // Construct the full URL for the image
-        const imageUrl = req.file ? `${global.baseUrl}/uploads/${req.file.filename}` : null;
-
-        // Create a new post
-        const newPost = new Post({
-            content: req.body.content,
-            profileName: req.body.profileName,
-            imageUrl: imageUrl, // Store the full URL here
-            comments: [],
-        });
-
-        // Save the post to the database
-        await newPost.save();
-        res.status(201).json(newPost);
->>>>>>> 5abb461ca710a01936e209acf8b37720725d5a07
     } catch (error) {
         res.status(500).json({ message: error.message });
     }
 };
 
-<<<<<<< HEAD
 
 exports.getPosts = async (req, res) => {
     try {
@@ -61,16 +40,51 @@ exports.getPosts = async (req, res) => {
             profileName: post.profileName,
             imageUrl: post.imageUrl,
             comments: post.comments,
+            createdAt: post.createdAt,
         }));
         res.status(200).json(responsePosts); // Return the formatted posts
-=======
-// Get all posts
-exports.getPosts = async (req, res) => {
-    try {
-        const posts = await Post.find();
-        res.status(200).json(posts);
->>>>>>> 5abb461ca710a01936e209acf8b37720725d5a07
     } catch (error) {
         res.status(500).json({ message: error.message });
     }
 };
+
+//add comment to a post
+exports.addComment = async(req, res) =>{
+    try{
+        console.log("Request Body:", req.body);
+        const post = await Post.findById(req.params.postId);
+        console.log("post found:", post);
+
+        if (!post){
+            return res.status(404).json({ message: 'Post not found'});
+        }
+        const newComment = {
+            comment: req.body.comment,
+            username: req.body.username,
+        };
+        post.comments.push(newComment);
+        await post.save();
+
+        res.status(201).json({ message: 'Comment added', post});
+
+    } catch(error){
+        console.error("Error adding comment", error);
+        res.status(500).json({ message: 'Error adding comment', error});
+    }
+};
+
+exports.getComments = async (req, res) => {
+    try {
+        const post = await Post.findById(req.params.postId);
+        if (!post) {
+            return res.status(404).json({ message: 'Post not found' });
+        }
+
+        res.status(200).json(post.comments);
+    } catch (error) {
+        console.error("Error fetching comments", error);
+        res.status(500).json({ message: 'Error fetching comments', error });
+    }
+};
+
+

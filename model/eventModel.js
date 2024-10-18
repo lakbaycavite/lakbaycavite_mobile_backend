@@ -21,11 +21,7 @@ const eventSchema = new Schema({
         required: false,
     },
     date: {
-<<<<<<< HEAD
         type: Date,  
-=======
-        type: Date,  // Add a date field here
->>>>>>> 5abb461ca710a01936e209acf8b37720725d5a07
         required: true,
     },
 
