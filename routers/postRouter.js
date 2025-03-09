@@ -16,7 +16,7 @@ const storage = multer.diskStorage({
 const upload = multer({ storage: storage });
 
 
-router.post('/', upload.single('image'), createPost); 
+router.post('/posts', upload.single('image'), createPost); 
 router.get('/', getPosts); 
 router.post('/:postId/comments', addComment);// handiling adding a comment
 router.get('/posts/:postId/comments', getComments);

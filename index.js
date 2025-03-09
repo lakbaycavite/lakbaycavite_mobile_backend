@@ -45,13 +45,26 @@ app.post('/upload', upload.single('file'), (req, res) => {
     });
   });
 
+// mongoose.connect(process.env.MONGO_URI)
+//     .then(() => {
+//         const url = new URL(process.env.BASE_URL); 
+//         app.listen(url.port || 7000, () => { 
+//             console.log(`Connected to DB & listening on ${url.port}`);
+//         });
+//     })
+//     .catch((error) => {
+//         console.log(error);
+//     });
+
 mongoose.connect(process.env.MONGO_URI)
     .then(() => {
-        const url = new URL(process.env.BASE_URL); 
-        app.listen(url.port || 7000, () => { 
-            console.log(`Connected to DB & listening on ${url.port}`);
+        const url = new URL(process.env.BASE_URL);  // Default to 5000 if missing
+        const PORT = url.port || 5000; // Use PORT 5000 if missing
+
+        app.listen(PORT, "0.0.0.0", () => {  // 🔹 Allow external access
+            console.log(`Connected to DB & listening on ${PORT}`);
         });
     })
     .catch((error) => {
-        console.log(error);
+        console.log("Database Connection Error:", error);
     });

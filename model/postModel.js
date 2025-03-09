@@ -7,7 +7,6 @@ const commentSchema = new mongoose.Schema({
 });
 
 
-
 const postSchema = new mongoose.Schema({
     content: String,
     profileName: String,
