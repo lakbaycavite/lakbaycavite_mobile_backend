@@ -71,7 +71,7 @@ exports.registerUser = async (email, password, username, firstName, lastName, ge
   const hashedPassword = await bcrypt.hash(password, 10);
   
 
-  const user = new User({ email, password: hashedPassword, username, firstName, lastName, age, gender });
+  const user = new User({ email, password: hashedPassword, username, firstName:null, lastName:null, age:null, gender:null });
   await user.save();
   
 
@@ -91,6 +91,8 @@ exports.loginUser = async (email, password) => {
   
   return {
     token,
+    user:{
+    _id: user._id,
     username: user.username,
     email: user.email,
     firstName: user.firstName,
@@ -98,6 +100,7 @@ exports.loginUser = async (email, password) => {
     age: user.age,
     gender: user.gender,
     image: user.image,
+    },
   };
 };
 

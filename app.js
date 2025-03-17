@@ -12,6 +12,7 @@ const app = express();
 app.use(body_parser.json());
 
 app.use('/posts', postRoutes);
+app.use('/api/posts', postRoutes);
 
 app.use('/bookmark', bookRoutes)
 

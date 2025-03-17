@@ -38,9 +38,25 @@ exports.login = async (req, res) => {
   const { email, password } = req.body;
 
   try {
+    console.log("📌 Login attempt for:", email); // ✅ Log email being used
+    
     const response = await authService.loginUser(email, password);
-    res.send(response);
+
+    if (!response.token) {
+      console.log("❌ Login failed: No token or user found"); // ✅ Debugging
+      return res.status(401).send({ message: 'Invalid credentials' });
+    }
+    console.log("✅ Login successful:", response.user); // ✅ Log user details
+
+    res.status(200).json({
+      token: response.token,
+      id: response.user._id, // ✅ Ensure user ID is included
+      username: response.user.username,
+      email: response.user.email,
+    });
+
   } catch (error) {
+    console.error("🔥 Error logging in:", error);
     res.status(401).send({ message: 'Invalid credentials' });
   }
 };
