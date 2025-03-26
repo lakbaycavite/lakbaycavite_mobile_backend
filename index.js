@@ -2,11 +2,11 @@ const express = require('express');
 const mongoose = require('mongoose');
 const bodyParser = require('body-parser');
 const cors = require('cors');
-require('dotenv').config();
-const multer = require('multer');
+const dotenv = require('dotenv');
 const path = require('path');
+const app = require('./app'); // 🔥 Import `app.js`
 
-const app = express(); // ✅ Removed 'require("./app")' since we define app here
+dotenv.config();
 
 // ✅ Middleware
 app.use(cors());
@@ -17,39 +17,27 @@ app.use(express.urlencoded({ extended: true }));
 // ✅ Serve static files (Uploads Folder)
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
-// ✅ Multer Config (For Image Uploads)
-const storage = multer.diskStorage({
-    destination: (req, file, cb) => {
-        cb(null, 'uploads/');
-    },
-    filename: (req, file, cb) => {
-        cb(null, Date.now() + path.extname(file.originalname));
-    },
-});
-const upload = multer({ storage: storage });
-
-// ✅ Upload Route
-app.post('/upload', upload.single('file'), (req, res) => {
-    if (!req.file) {
-        return res.status(400).json({ message: 'No file uploaded' });
-    }
-    res.status(200).json({
-        message: 'File uploaded successfully',
-        filePath: `${process.env.BASE_URL}/uploads/${req.file.filename}`, // ✅ Absolute URL
-    });
-});
-
-// ✅ MongoDB Connection
+// ✅ MongoDB Connection & Start Server
 mongoose.connect(process.env.MONGO_URI)
     .then(() => {
-        console.log(`✅ Connected to MongoDB`);
+        const PORT = process.env.PORT || 5000;
+        app.listen(PORT, () => {
+            console.log(`✅ Server running on port ${PORT}`);
+        });
     })
     .catch((error) => {
         console.log("❌ Database Connection Error:", error);
     });
 
-// ✅ Export the app (Para sa Vercel)
+    app.get('/', (req, res) => {
+        res.send('🚀 LakbayCavite Backend is Running Successfully!');
+      });
+      
+
+// ✅ Export for Vercel Deployment
 module.exports = app;
+
+
 
 
 

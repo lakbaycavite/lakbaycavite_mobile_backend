@@ -1,68 +1,142 @@
 const Post = require('../model/postModel');
-const path = require('path');
+const cloudinary = require('cloudinary').v2
+const User = require('../model/userModel'); // ✅ Import User Model
+const streamifier = require('streamifier');
+const multer = require('multer');
+require('dotenv').config();
+
+//cloudinary
+cloudinary.config({
+    cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
+    api_key: process.env.CLOUDINARY_API_KEY,
+    api_secret: process.env.CLOUDINARY_API_SECRET,
+});
+
+const storage = multer.memoryStorage();
+const upload = multer ({storage: storage});
 
 // Get All Posts
 exports.getPosts = async (req, res) => {
     try {
-        const posts = await Post.find().populate('user', 'username profileImage'); // ✅ Ensure `user` has correct fields
+        const posts = await Post.find()
+            .populate('user', 'username image') // ✅ Siguraduhin may 'image'
+            .sort({ createdAt: -1 });
+
+            console.log("✅ Posts API Response:", JSON.stringify(posts, null, 2)); // 📌 Log all posts
+
         res.json(posts);
     } catch (error) {
+        console.error("❌ Error fetching posts:", error);
         res.status(500).json({ message: 'Error fetching posts', error });
+        
     }
 };
 
-// Create post
+// exports.getPosts = async (req, res) => {
+//     try {
+//         const posts = await Post.find().populate('user', 'username image'); // ✅ Ensure `user` has correct fields
+//         res.json(posts);
+//     } catch (error) {
+//         res.status(500).json({ message: 'Error fetching posts', error });
+//     }
+// };
+
+// ✅ Create Post Controller (With Cloudinary Upload)
 exports.createPost = async (req, res) => {
     try {
-        const { content, user } = req.body; // ✅ Extract user ID from request
-
+        const { content, user } = req.body;
         if (!user) {
             return res.status(400).json({ message: "User ID is required" });
         }
 
-        const imageUrl = req.file ? `https://lakbaycavite-mobile-backend-2109bdtaz-lakbaycavites-projects.vercel.app/uploads/${req.file.filename}` : null;
+        // ✅ Get the user details along with their profile image
+        const userInfo = await User.findById(user, 'username image');
+        if (!userInfo) {
+            return res.status(404).json({ message: "User not found" });
+        }
 
+        let imageUrl = null;
+        if (req.file) {
+            const result = await new Promise((resolve, reject) => {
+                const stream = cloudinary.uploader.upload_stream(
+                    { folder: 'lakbaycavite/posts' },
+                    (error, result) => (error ? reject(error) : resolve(result))
+                );
+                streamifier.createReadStream(req.file.buffer).pipe(stream);
+            });
+
+            imageUrl = result.secure_url;
+        }
+
+        // ✅ Ensure `profileImage` is stored
         const newPost = new Post({
             content,
             user,
-            attachments: req.file ? [`https://lakbaycavite-mobile-backend-2109bdtaz-lakbaycavites-projects.vercel.app/uploads/${req.file.filename}`] : [], // ✅ Image is stored in attachments
+            profileImage: userInfo.image, // ✅ Get user's profile image
+            attachments: imageUrl ? [imageUrl] : [],
             comments: [],
             is_hidden: false,
-            likedBy: []
+            likedBy: [],
         });
-
 
         await newPost.save();
 
-        res.status(201).json({ message: "Post created successfully", post: newPost });
+        console.log("✅ Post Created with Image:", newPost); // Debugging
+
+        res.status(201).json({ message: 'Post created successfully', post: newPost });
     } catch (error) {
-        res.status(500).json({ message: "Error creating post", error });
+        console.error('❌ Error creating post:', error);
+        res.status(500).json({ message: 'Error creating post', error });
     }
 };
 
+
+
 // exports.createPost = async (req, res) => {
-//      console.log("📌 Received a POST request for /api/posts"); // ✅ Debugging
-//      console.log("🔍 Request Body:", req.body);
-//      console.log("📸 Uploaded File:", req.file);
 //     try {
-        
-//         const imageUrl = req.file ? `${global.baseUrl}/uploads/${req.file.filename}` : null;
-//         console.log("✅ Image uploaded:", imageUrl); // ✅ Debugging
-//         const newPost = new Post({
-//             content: req.body.content,
-//             user: req.body.user,
-//             imageUrl: imageUrl, 
-//             comments: [],
+//       const { content, user } = req.body; // Ensure user ID is included
+  
+//       if (!user) {
+//         return res.status(400).json({ message: 'User ID is required' });
+//       }
+  
+//       let imageUrl = null;
+      
+//       if (req.file) {
+//         // Upload image to Cloudinary
+//         const result = await new Promise((resolve, reject) => {
+//           const stream = cloudinary.uploader.upload_stream(
+//             { folder: 'lakbaycavite/posts' },
+//             (error, result) => (error ? reject(error) : resolve(result))
+//           );
+//           streamifier.createReadStream(req.file.buffer).pipe(stream);
 //         });
-
-//         await newPost.save();
-//         console.log("✅ Post created:", newPost); // ✅ Debugging
-
-//         res.status(201).json({ message: 'Post created successfully', post: newPost });
+  
+//         imageUrl = result.secure_url; // Get the Cloudinary image URL
+//       }
+  
+//       // ✅ Create Post (Include User Profile Image)
+//       const newPost = new Post({
+//         content,
+//         user,
+//         profileImage: userData.image || '', // ✅ Store the user’s profile image
+//         attachments: imageUrl ? [imageUrl] : [],
+//         comments: [],
+//         is_hidden: false,
+//         likedBy: [],
+//     });
+  
+//       await newPost.save();
+  
+//       res.status(201).json({ message: 'Post created successfully', post: newPost });
 //     } catch (error) {
-//         res.status(500).json({ message: 'Error creating post', error });
+//       console.error('❌ Error creating post:', error);
+//       res.status(500).json({ message: 'Error creating post', error });
 //     }
-// };
+//   };
+  
+  // ✅ Multer Middleware Export (For Routes)
+  exports.uploadMiddleware = upload.single('image');
 
 
 // Get Single Post
@@ -133,100 +207,3 @@ exports.getComments = async (req, res) => {
         res.status(500).json({ message: "Error fetching comments", error });
     }
 };
-
-
-
-
-
-
-
-// const Post = require('../model/postModel');
-// const path = require('path');
-
-
-
-// exports.createPost = async (req, res) => {
-//     try {
-//         const imageUrl = req.file ? `${global.baseUrl}/uploads/${req.file.filename}` : null;
-//         const newPost = new Post({
-//             content: req.body.content,
-//             profileName: req.body.profileName,
-//             imageUrl: imageUrl, 
-//             comments: [],
-//         });
-
-        
-//         await newPost.save();
-
-//         const responsePost = {
-//             id: newPost._id, 
-//             content: newPost.content,
-//             profileName: newPost.profileName,
-//             imageUrl: newPost.imageUrl,
-//             comments: newPost.comments,
-//         };
-
-//         res.status(201).json(responsePost);
-//     } catch (error) {
-//         res.status(500).json({ message: error.message });
-//     }
-// };
-
-
-// exports.getPosts = async (req, res) => {
-//     try {
-//         const posts = await Post.find();
-//         const responsePosts = posts.map(post => ({
-//             id: post._id, // Explicitly include the ID
-//             content: post.content,
-//             profileName: post.profileName,
-//             imageUrl: post.imageUrl,
-//             comments: post.comments,
-//             createdAt: post.createdAt,
-//         }));
-//         res.status(200).json(responsePosts); // Return the formatted posts
-//     } catch (error) {
-//         res.status(500).json({ message: error.message });
-//     }
-// };
-
-// //add comment to a post
-// exports.addComment = async(req, res) =>{
-//     try{
-//         console.log("Request Body:", req.body);
-//         const post = await Post.findById(req.params.postId);
-//         console.log("post found:", post);
-
-//         if (!post){
-//             return res.status(404).json({ message: 'Post not found'});
-//         }
-//         const newComment = {
-//             comment: req.body.comment,
-//             username: req.body.username,
-//         };
-//         post.comments.push(newComment);
-//         await post.save();
-
-//         res.status(201).json({ message: 'Comment added', post});
-
-//     } catch(error){
-//         console.error("Error adding comment", error);
-//         res.status(500).json({ message: 'Error adding comment', error});
-//     }
-// };
-
-// exports.getComments = async (req, res) => {
-//     try {
-//         const post = await Post.findById(req.params.postId);
-//         if (!post) {
-//             return res.status(404).json({ message: 'Post not found' });
-//         }
-
-//         res.status(200).json(post.comments);
-//     } catch (error) {
-//         console.error("Error fetching comments", error);
-//         res.status(500).json({ message: 'Error fetching comments', error });
-//     }
-// };
-
-

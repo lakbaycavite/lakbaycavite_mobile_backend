@@ -17,6 +17,23 @@ const authMiddleware = (req, res, next) => {
   }
 };
 
+exports.refreshToken = async (req, res) => {
+  const { refreshToken } = req.body;
+
+  if (!refreshToken) {
+      return res.status(401).json({ message: "Refresh token required." });
+  }
+
+  try {
+      const decoded = jwt.verify(refreshToken, process.env.REFRESH_SECRET);
+      const newToken = jwt.sign({ id: decoded.id }, process.env.JWT_SECRET, { expiresIn: '1h' });
+
+      res.json({ token: newToken });
+  } catch (error) {
+      res.status(403).json({ message: "Invalid refresh token." });
+  }
+};
+
 module.exports = authMiddleware;
 
 

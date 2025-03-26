@@ -104,35 +104,51 @@ exports.loginUser = async (email, password) => {
   };
 };
 
-exports.updateUser = async (userId, updateData) => {
+exports.updateUser = async (userId, updateFields) => {
   try {
-  
+    console.log("📡 Updating user in database:", updateFields); // ✅ Log updateFields
     const updatedUser = await User.findByIdAndUpdate(
       userId,
-      updateData, 
-      { new: true, runValidators: true }
+      { $set: updateFields }, // ✅ Ensure image is included
+      { new: true } // Return updated user
     );
-
-   
-    if (!updatedUser) {
-      throw new Error('User not found');
-    }
-
-    
-    return {
-      success: true,
-      message: 'User updated successfully',
-      data: updatedUser
-    };
-
+    return updatedUser;
   } catch (error) {
-    
-    return {
-      success: false,
-      message: error.message || 'Failed to update user',
-    };
+    console.error("🔥 Error in updateUser service:", error);
+    return null;
   }
 };
+
+
+// exports.updateUser = async (userId, updateData) => {
+//   try {
+  
+//     const updatedUser = await User.findByIdAndUpdate(
+//       userId,
+//       updateData, 
+//       { new: true, runValidators: true }
+//     );
+
+   
+//     if (!updatedUser) {
+//       throw new Error('User not found');
+//     }
+
+    
+//     return {
+//       success: true,
+//       message: 'User updated successfully',
+//       data: updatedUser
+//     };
+
+//   } catch (error) {
+    
+//     return {
+//       success: false,
+//       message: error.message || 'Failed to update user',
+//     };
+//   }
+// };
 
 exports.getUserProfile = async (req, res) => {
   try {

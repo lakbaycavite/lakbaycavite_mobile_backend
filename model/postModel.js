@@ -9,6 +9,7 @@ const commentSchema = new mongoose.Schema({
 const postSchema = new mongoose.Schema({
     content: { type: String, required: true },
     user: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
+    profileImage: { type: String }, // ✅ Ensure we store profileImage in the database
     attachments: [{ type: String }], // List of image/file URLs
     comments: [commentSchema], // List of comments
     is_hidden: { type: Boolean, default: false }, // Visibility toggle

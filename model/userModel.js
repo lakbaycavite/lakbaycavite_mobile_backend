@@ -8,7 +8,7 @@ const userSchema = new mongoose.Schema({
   lastName: String,
   age: Number,
   gender: String,
-  image: String,
+  image: { type: String, default: '' }, 
   
   
 },{timestamps:true});
