@@ -9,6 +9,7 @@ const userSchema = new mongoose.Schema({
   age: Number,
   gender: String,
   image: { type: String, default: '' }, 
+  isActive: {type: Boolean, default: true}
   
   
 },{timestamps:true});
